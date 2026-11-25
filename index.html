@@ -612,8 +612,8 @@ const REVIEWS = [
   {
     slug: "ta-spitia-allazoun-thesi-ti-nychta",
     title: "Τα σπίτια αλλάζουν θέση τη νύχτα",
-    company: "Horos Theatre Company",
-    venue: "Βοξ",
+    company: null,
+    venue: null,
     date: "2026-10-04",
     rating: null,
     tags: ["πολιτικό", "συλλογικότητα"],
@@ -648,7 +648,7 @@ const byNew = [...REVIEWS].sort((a, b) => b.date.localeCompare(a.date));
 const byOld = [...byNew].reverse();
 byOld.forEach((r, i) => { r.no = String(i + 1).padStart(2, '0'); });
 const allTags = [...new Set(REVIEWS.flatMap(r => r.tags))];
-const allVenues = [...new Set(REVIEWS.map(r => r.venue))];
+const allVenues = [...new Set(REVIEWS.map(r => r.venue).filter(Boolean))];
 
 const view = document.getElementById('view');
 const progress = document.getElementById('progress');
@@ -659,7 +659,7 @@ function rowHTML(r) {
     <span class="n">№ ${r.no}</span>
     <span class="d">${fmtDate(r.date)}</span>
     <span class="t">${esc(r.title)}<small>${esc(r.excerpt)}</small></span>
-    <span class="v">${esc(r.venue)}</span>
+    <span class="v">${esc(r.venue || '')}</span>
     <span class="r">${r.rating != null ? r.rating + '/10' : ''}</span>
   </a></li>`;
 }
@@ -683,7 +683,7 @@ function renderHome() {
     <section class="featured" aria-labelledby="feat-title">
       <p class="eyebrow">Τελευταία σημείωση<br>№ ${first.no}</p>
       <div>
-        <p class="eyebrow">${esc(first.venue)} · ${fmtDate(first.date)} · ${minutes(first)}′ ανάγνωσης</p>
+        <p class="eyebrow">${[first.venue && esc(first.venue), fmtDate(first.date), minutes(first) + '′ ανάγνωσης'].filter(Boolean).join(' · ')}</p>
         <h2 id="feat-title"><a href="#${first.slug}">${esc(first.title)}</a></h2>
         <p class="excerpt">${esc(first.excerpt)}</p>
         <a class="more" href="#${first.slug}">Διάβασε το κείμενο</a>
@@ -742,7 +742,7 @@ function updateList() {
   let list = byNew.filter(r =>
     (!filter.tag || r.tags.includes(filter.tag)) &&
     (!filter.venue || r.venue === filter.venue) &&
-    (!needle || norm([r.title, r.venue, r.company || '', r.tags.join(' '), r.excerpt, r.body.map(b => b.p || b.q || '').join(' ')].join(' ')).includes(needle)));
+    (!needle || norm([r.title, r.venue || '', r.company || '', r.tags.join(' '), r.excerpt, r.body.map(b => b.p || b.q || '').join(' ')].join(' ')).includes(needle)));
   if (filter.sort === 'old') list.reverse();
   if (filter.sort === 'rating') list.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   document.getElementById('count').textContent = list.length === 1 ? '1 σημείωση' : list.length + ' σημειώσεις';
@@ -776,7 +776,7 @@ function renderPiece(r) {
     <article class="piece">
       <a class="back" href="#arxeio">← Αρχείο</a>
       <header class="piece-head">
-        <p class="eyebrow">№ ${r.no} · ${esc(r.venue)} · ${fmtDate(r.date)} · ${minutes(r)}′ ανάγνωσης</p>
+        <p class="eyebrow">${['№ ' + r.no, r.venue && esc(r.venue), fmtDate(r.date), minutes(r) + '′ ανάγνωσης'].filter(Boolean).join(' · ')}</p>
         <h1>${esc(r.title)}</h1>
       </header>
       <div class="cols">
@@ -786,7 +786,7 @@ function renderPiece(r) {
           <dl>
             <div><dt>Παράσταση</dt><dd>${esc(r.title)}</dd></div>
             ${r.company ? `<div><dt>Ομάδα</dt><dd>${esc(r.company)}</dd></div>` : ''}
-            <div><dt>Χώρος</dt><dd>${esc(r.venue)}</dd></div>
+            ${r.venue ? `<div><dt>Χώρος</dt><dd>${esc(r.venue)}</dd></div>` : ''}
             <div><dt>Ημερομηνία</dt><dd>${fmtDate(r.date)}</dd></div>
           </dl>
           ${r.rating != null ? `<div class="tear"></div><div class="score"><span>Βαθμολογία</span><b>${r.rating}/10</b></div>` : ''}
